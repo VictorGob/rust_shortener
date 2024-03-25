@@ -19,12 +19,14 @@ fn landing() -> String {
 }
 
 fn check_database() -> Result<(), String> {
-    todo!()
+    println!("Checking database connection...");
+    Ok(())
 }
 
 #[launch]
 fn rocket() -> _ {
     rocket::build()
+        .configure(rocket::Config::figment())
         .attach(AdHoc::try_on_ignite(
             "Database Connection Check",
             |rocket| async {

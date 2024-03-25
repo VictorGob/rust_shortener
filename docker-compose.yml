@@ -1,0 +1,22 @@
+version: "3.8"
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: local_url_shortener
+      POSTGRES_USER: local_url_shortener
+    # * Uncomment the following lines to persist data on the host
+    # volumes:
+    #   - data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  app:
+    image: rust:slim-bookworm
+    restart: always
+    working_dir: /app
+    ports: 
+      - 8001:8001
+    volumes:
+      - .:/app
+    command: tail -F anything
