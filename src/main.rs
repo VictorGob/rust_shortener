@@ -2,6 +2,7 @@
 extern crate rocket;
 
 use rocket::http::Status;
+use rocket::response::Redirect;
 use url::Url;
 
 use rocket_db_pools::sqlx::{self, Row};
@@ -23,7 +24,7 @@ async fn short_creation(mut db: Connection<Urls>, url: &str) -> Result<String, S
 
     let id = match id_result {
         Ok(row) => match row.try_get::<String, _>(0) {
-            Ok(id) => return Ok(format!("http://localhost:8001/{}", id)),
+            Ok(id) => return Ok(format!("http://localhost:8001/{}", id.trim())),
             Err(_) => nanoid::nanoid!(6),
         },
         Err(Error::RowNotFound) => nanoid::nanoid!(6),
@@ -32,9 +33,9 @@ async fn short_creation(mut db: Connection<Urls>, url: &str) -> Result<String, S
             return Err(Status::InternalServerError);
         }
     };
-
+    println!("Generated ID: {}", id);
     let _ = sqlx::query("INSERT INTO urls_data (id, url) VALUES ($1, $2);")
-        .bind(&id)
+        .bind(id.trim())
         .bind(&p_url.to_string())
         .execute(&mut **db)
         .await
@@ -43,7 +44,7 @@ async fn short_creation(mut db: Connection<Urls>, url: &str) -> Result<String, S
             Status::InternalServerError
         });
 
-    Ok(format!("Returned ID: {}", id))
+    Ok(format!("http://localhost:8001/{}", id.trim()))
 }
 
 #[get("/")]
@@ -52,8 +53,30 @@ fn landing() -> String {
 }
 
 #[get("/<url_id>")]
-fn shortener(url_id: &str) -> String {
-    format!("Hello, world! -> {}", url_id)
+async fn shortener(mut db: Connection<Urls>, url_id: &str) -> Result<Redirect, Status> {
+    let id_result = sqlx::query("SELECT url FROM urls_data WHERE id = $1;")
+        .bind(url_id)
+        .fetch_one(&mut **db)
+        .await
+        .map_err(|e| match e {
+            Error::RowNotFound => Status::NotFound,
+            _ => Status::InternalServerError,
+        });
+    let id = match id_result {
+        Ok(row) => match row.try_get::<String, _>(0) {
+            Ok(id) => id,
+            Err(_) => {
+                println!("Error: {}", Error::ColumnNotFound("id".to_string()));
+                return Err(Status::InternalServerError);
+            }
+        },
+        Err(e) => {
+            println!("Error retrieving url data: {}", e);
+            return Err(Status::InternalServerError);
+        }
+    };
+    println!("Redirecting to: {}", id);
+    Ok(Redirect::to(id))
 }
 
 #[launch]
