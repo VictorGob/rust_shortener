@@ -6,9 +6,9 @@ services:
       POSTGRES_PASSWORD: local_url_shortener
       # POSTGRES_USER: local_url_shortener
     volumes:
+    - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     # * Uncomment the following line to persist data on the host
     #   - ./data/:/var/lib/postgresql/data
-    - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
   app:
