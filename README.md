@@ -23,4 +23,4 @@ curl -X POST -d 'https://www.google.com' http://127.0.0.1:8001/
 
 
 ## Notes:
-- Uncomment the line indicated in the docker-compose.yml file to persist the PostgreSQL data.
+- Uncomment the line indicated in the `docker-compose.yml` file to persist the PostgreSQL data.
