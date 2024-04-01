@@ -15,6 +15,7 @@ struct Urls(sqlx::PgPool);
 
 #[post("/", data = "<url>")]
 async fn short_creation(mut db: Connection<Urls>, url: &str) -> Result<String, Status> {
+    // TODO: Retrieve port from config
     let p_url = Url::parse(url).map_err(|_| Status::UnprocessableEntity)?;
 
     let id_result = sqlx::query("SELECT id FROM urls_data WHERE url = $1;")
@@ -49,6 +50,7 @@ async fn short_creation(mut db: Connection<Urls>, url: &str) -> Result<String, S
 
 #[get("/")]
 fn landing() -> String {
+    // TODO: Add a landing page
     "Hello, world!".to_string()
 }
 
